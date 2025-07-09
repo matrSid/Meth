@@ -11,6 +11,19 @@ const MathGame = () => {
   const [feedback, setFeedback] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
   const [problemsSolved, setProblemsSolved] = useState(0);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved === null ? window.matchMedia('(prefers-color-scheme: dark)').matches : saved === 'true';
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
 
   const difficulties = {
     basic: { name: 'Basic Arithmetic', color: 'bg-green-500' },
@@ -264,7 +277,14 @@ const MathGame = () => {
       setProblemsSolved(problemsSolved + 1);
     } else {
       setStreak(0);
-      setFeedback('Not quite right. Try again!');
+      // If answer is close but not exact, show a syntax reminder
+      if (
+        userAnswer.replace(/\s+/g, '').toLowerCase() === currentProblem.answer.toString().replace(/\s+/g, '').toLowerCase()
+      ) {
+        setFeedback('Check your syntax! Make sure to include all coefficients (e.g., 1x^2, not x^2) and match the required format.');
+      } else {
+        setFeedback('Not quite right. Try again!');
+      }
       setShowAnswer(true);
     }
   };
@@ -280,48 +300,55 @@ const MathGame = () => {
   }, [difficulty]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-4">
+    <div className={"min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-4 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"}>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Calculator className="w-8 h-8 text-blue-600" />
-            <h1 className="text-4xl font-bold text-gray-800">Math Challenge</h1>
+            <Calculator className="w-8 h-8 text-blue-600 dark:text-blue-300" />
+            <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100">Math Challenge</h1>
+            <button
+              onClick={() => setDarkMode((d) => !d)}
+              className="ml-4 px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? '🌙' : '☀️'}
+            </button>
           </div>
           
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4 text-center border border-gray-200 dark:border-gray-700">
             <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-800">{score}</div>
-            <div className="text-sm text-gray-600">Score</div>
+            <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{score}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Score</div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4 text-center border border-gray-200 dark:border-gray-700">
             <Star className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-800">{streak}</div>
-            <div className="text-sm text-gray-600">Streak</div>
+            <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{streak}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Streak</div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4 text-center border border-gray-200 dark:border-gray-700">
             <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-800">{problemsSolved}</div>
-            <div className="text-sm text-gray-600">Solved</div>
+            <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{problemsSolved}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Solved</div>
           </div>
         </div>
 
         {/* Difficulty Selector */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold mb-4 text-gray-700">Difficulty Level</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200">Difficulty Level</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {Object.entries(difficulties).map(([key, diff]) => (
               <button
                 key={key}
                 onClick={() => setDifficulty(key)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`px-4 py-2 rounded-lg font-medium transition-all border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-300 ${
                   difficulty === key
-                    ? `${diff.color} text-white shadow-lg`
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? `${diff.color} text-white shadow-lg dark:shadow-blue-900`
+                    : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >
                 {diff.name}
@@ -332,12 +359,12 @@ const MathGame = () => {
 
         {/* Problem Display */}
         {currentProblem && (
-          <div className="bg-white rounded-lg shadow-lg p-8 mb-6">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-8 mb-6 border border-gray-200 dark:border-gray-700">
             <div className="text-center mb-6">
-              <div className="text-sm text-gray-500 mb-2">
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 {difficulties[difficulty].name}
               </div>
-              <div className="text-3xl font-mono text-gray-800 mb-6 min-h-[100px] flex items-center justify-center">
+              <div className="text-3xl font-mono text-gray-800 dark:text-gray-100 mb-6 min-h-[100px] flex items-center justify-center">
                 {currentProblem.problem}
               </div>
               
@@ -348,26 +375,33 @@ const MathGame = () => {
                   onChange={(e) => setUserAnswer(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && checkAnswer()}
                   placeholder="Enter your answer..."
-                  className="px-4 py-2 border border-gray-300 rounded-lg w-64 text-center text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg w-64 text-center text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
+              </div>
+
+              {/* Syntax Tips */}
+              <div className="text-center mb-4">
+                <div className="inline-block bg-blue-50 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded text-sm">
+                  <b>Syntax Tips:</b> For polynomials, always include the coefficient (e.g., <span className="font-mono">1x^2</span>, not <span className="font-mono">x^2</span>). For fractions, use <span className="font-mono">a/b</span>. For expressions, use <span className="font-mono">2x^3</span> format. Answers must match the required format exactly.
+                </div>
               </div>
 
               <div className="flex gap-4 justify-center">
                 <button
                   onClick={checkAnswer}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
                 >
                   Submit
                 </button>
                 <button
                   onClick={skipProblem}
-                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  className="px-6 py-2 bg-gray-500 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-600 dark:hover:bg-gray-800 transition-colors"
                 >
                   Skip
                 </button>
                 <button
                   onClick={generateProblem}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                  className="px-6 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition-colors flex items-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
                   New Problem
@@ -380,8 +414,8 @@ const MathGame = () => {
               <div className="text-center mb-4">
                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
                   feedback.includes('Correct') 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
+                    ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
+                    : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                 }`}>
                   {feedback.includes('Correct') ? (
                     <CheckCircle className="w-5 h-5" />
@@ -395,11 +429,11 @@ const MathGame = () => {
 
             {/* Show Answer */}
             {showAnswer && (
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-lg font-semibold text-gray-700 mb-2">
+              <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-lg font-semibold text-gray-700 dark:text-gray-100 mb-2">
                   Answer: {currentProblem.answer}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-300">
                   {currentProblem.solution}
                 </div>
               </div>
@@ -408,15 +442,33 @@ const MathGame = () => {
         )}
 
         {/* Instructions */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-3 text-gray-700">How to Play</h3>
-          <div className="text-gray-600 space-y-2">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700 mb-6">
+          <h3 className="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">How to Play</h3>
+          <div className="text-gray-600 dark:text-gray-300 space-y-2">
             <p>• Choose your difficulty level from Basic to Calculus</p>
             <p>• Each level generates unlimited unique problems</p>
             <p>• Type your answer and press Submit or Enter</p>
             <p>• Build up your streak by solving problems consecutively</p>
             <p>• For fractions, use format like "3/4" or for expressions like "2x^3"</p>
           </div>
+        </div>
+
+        {/* Answer Format Guide */}
+        <div className="bg-blue-50 dark:bg-blue-900 rounded-lg shadow-md p-6 border border-blue-200 dark:border-blue-700 mb-8">
+          <h3 className="text-lg font-semibold mb-3 text-blue-800 dark:text-blue-200">Answer Format Guide</h3>
+          <ul className="text-blue-800 dark:text-blue-100 space-y-2 text-sm list-disc pl-5">
+            <li><b>Polynomials/Expressions:</b> Always include coefficients (e.g., <span className="font-mono">1x^2</span>, not <span className="font-mono">x^2</span>). Use <span className="font-mono">^</span> for powers. Write terms in standard form (e.g., <span className="font-mono">2x^3 + 1x^2</span>).</li>
+            <li><b>Fractions:</b> Use <span className="font-mono">a/b</span> (e.g., <span className="font-mono">3/4</span>).</li>
+            <li><b>Decimals:</b> Use standard decimal notation (e.g., <span className="font-mono">2.5</span>).</li>
+            <li><b>Roots:</b> Use <span className="font-mono">sqrt(n)</span> for square roots (e.g., <span className="font-mono">sqrt(2)</span>), <span className="font-mono">cuberoot(n)</span> for cube roots.</li>
+            <li><b>Exponents:</b> Use <span className="font-mono">^</span> (e.g., <span className="font-mono">2^3</span>).</li>
+            <li><b>Logarithms:</b> Use <span className="font-mono">log_base(value)</span> (e.g., <span className="font-mono">log_2(8)</span>).</li>
+            <li><b>Trigonometry:</b> Use exact values (e.g., <span className="font-mono">1/2</span>, <span className="font-mono">sqrt(3)/2</span>, <span className="font-mono">1</span>), not decimals.</li>
+            <li><b>Systems of Equations:</b> Use <span className="font-mono">x = 2, y = 3</span> format.</li>
+            <li><b>Derivatives/Integrals:</b> Use <span className="font-mono">nx^m</span> for terms, include <span className="font-mono">+ C</span> for integrals.</li>
+            <li><b>Limits:</b> Just the numeric answer (e.g., <span className="font-mono">5</span>).</li>
+            <li><b>General:</b> No spaces, use lowercase <span className="font-mono">x</span>, and match the format shown in the solution exactly.</li>
+          </ul>
         </div>
       </div>
     </div>
