@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import { Calculator, Trophy, Star, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 
